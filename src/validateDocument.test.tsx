@@ -5,6 +5,7 @@ import { renderNode } from './renderNode';
 import { MAX_SUPPORTED_SCHEMA_VERSION } from './schema';
 import type { RenderContext } from './renderContext';
 import exampleDoc from '../templates/example.json';
+import remoteDoc from '../example/assets/paywalls/default.json';
 
 const validDoc = () => ({
   schemaVersion: 1,
@@ -399,6 +400,31 @@ describe('validateDocument', () => {
 
       // Assert
       expect(screen.getByText('Offer ends soon')).toBeOnTheScreen();
+    });
+  });
+
+  // This file is served to the example app over the network from `main`, so an
+  // invalid one would not fail loudly — the app would quietly fall back to its
+  // bundled copy and the remote path would look like it works.
+  describe('the document the example app fetches', () => {
+    it('validates successfully', () => {
+      // Act
+      const result = validateDocument(remoteDoc);
+
+      // Assert
+      expect(result.ok).toBe(true);
+    });
+
+    it('is visibly distinguishable from the bundled document', () => {
+      // Arrange
+      const remote = validateDocument(remoteDoc);
+      const bundled = validateDocument(exampleDoc);
+      if (!remote.ok || !bundled.ok) throw new Error('both should validate');
+
+      // Act / Assert — the demo relies on telling the two apart on screen.
+      expect(remote.doc.revision).not.toBe(bundled.doc.revision);
+      expect(JSON.stringify(remote.doc)).toContain('Fetched from GitHub');
+      expect(JSON.stringify(bundled.doc)).not.toContain('Fetched from GitHub');
     });
   });
 });

@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "id": "default",
+  "revision": "remote-2026-09-01",
+
+  "background": {
+    "color": "#0B0D12"
+  },
+
+  "packages": [
+    {
+      "id": "annual",
+      "productId": "com.example.app.pro.annual",
+      "title": "Annual",
+      "subtitle": "{{package.price}} per year · {{package.pricePerUnit}} / month",
+      "badge": "Save 44%",
+      "selectedByDefault": true
+    },
+    {
+      "id": "monthly",
+      "productId": "com.example.app.pro.monthly",
+      "title": "Monthly",
+      "subtitle": "{{package.price}} per month"
+    }
+  ],
+
+  "root": {
+    "type": "stack",
+    "direction": "vertical",
+    "scrollable": true,
+    "style": {
+      "flex": 1,
+      "paddingHorizontal": 24,
+      "paddingTop": 16,
+      "paddingBottom": 24
+    },
+    "children": [
+      {
+        "type": "stack",
+        "direction": "horizontal",
+        "justify": "end",
+        "children": [
+          {
+            "type": "text",
+            "id": "close",
+            "text": "✕",
+            "accessibilityLabel": "Close",
+            "style": { "color": "#6B7280", "fontSize": 22, "padding": 8 },
+            "action": { "type": "dismiss" }
+          }
+        ]
+      },
+
+      { "type": "spacer", "size": 12 },
+
+      {
+        "type": "text",
+        "text": "Fetched from GitHub",
+        "style": {
+          "color": "#5B8CFF",
+          "fontSize": 12,
+          "fontWeight": "700",
+          "letterSpacing": 1,
+          "textAlign": "center"
+        }
+      },
+
+      {
+        "type": "text",
+        "text": "Everything, unlocked",
+        "style": {
+          "color": "#FFFFFF",
+          "fontSize": 30,
+          "fontWeight": "700",
+          "textAlign": "center",
+          "marginTop": 8
+        }
+      },
+
+      {
+        "type": "text",
+        "text": "This copy lives in a JSON file on GitHub. Edit it, push, reopen the paywall — no app update.",
+        "style": {
+          "color": "#9CA3AF",
+          "fontSize": 15,
+          "lineHeight": 22,
+          "textAlign": "center",
+          "marginTop": 8
+        }
+      },
+
+      {
+        "type": "stack",
+        "direction": "vertical",
+        "gap": 12,
+        "style": { "marginVertical": 28 },
+        "children": [
+          {
+            "type": "text",
+            "text": "✓  Unlimited projects",
+            "style": { "color": "#E5E7EB", "fontSize": 16 }
+          },
+          {
+            "type": "text",
+            "text": "✓  Offline sync across devices",
+            "style": { "color": "#E5E7EB", "fontSize": 16 }
+          },
+          {
+            "type": "text",
+            "text": "✓  Priority support",
+            "style": { "color": "#E5E7EB", "fontSize": 16 }
+          }
+        ]
+      },
+
+      {
+        "type": "packageList",
+        "id": "packages",
+        "direction": "vertical",
+        "gap": 12,
+        "itemStyle": {
+          "backgroundColor": "#151922",
+          "borderRadius": 14,
+          "borderWidth": 1,
+          "borderColor": "#252B38",
+          "paddingVertical": 16,
+          "paddingHorizontal": 18
+        },
+        "selectedItemStyle": {
+          "borderColor": "#5B8CFF",
+          "backgroundColor": "#161E33"
+        },
+        "titleStyle": { "color": "#FFFFFF", "fontSize": 17, "fontWeight": "600" },
+        "subtitleStyle": { "color": "#9CA3AF", "fontSize": 14, "marginTop": 2 },
+        "badgeStyle": {
+          "backgroundColor": "#5B8CFF",
+          "borderRadius": 6,
+          "paddingHorizontal": 8,
+          "paddingVertical": 3,
+          "alignSelf": "flex-start",
+          "marginTop": 8
+        },
+        "badgeTextStyle": {
+          "color": "#0B0D12",
+          "fontSize": 11,
+          "fontWeight": "700"
+        }
+      },
+
+      { "type": "spacer", "size": 24 },
+
+      {
+        "type": "button",
+        "id": "cta",
+        "label": "Try free for {{package.trialLength}}",
+        "accessibilityLabel": "Start a {{package.trialLength}} free trial, then {{package.price}} per {{package.period}}",
+        "action": { "type": "purchase" },
+        "style": {
+          "backgroundColor": "#5B8CFF",
+          "borderRadius": 14,
+          "paddingVertical": 17
+        },
+        "labelStyle": {
+          "color": "#0B0D12",
+          "fontSize": 17,
+          "fontWeight": "700",
+          "textAlign": "center"
+        },
+        "pressedStyle": { "opacity": 0.85 },
+        "disabledStyle": { "opacity": 0.5 }
+      },
+
+      {
+        "type": "text",
+        "text": "Then {{package.price}} per {{package.period}}. Cancel anytime in Settings.",
+        "style": {
+          "color": "#6B7280",
+          "fontSize": 12,
+          "textAlign": "center",
+          "marginTop": 12,
+          "lineHeight": 17
+        }
+      },
+
+      { "type": "spacer", "flex": 1 },
+
+      {
+        "type": "divider",
+        "thickness": 1,
+        "color": "#1C212B",
+        "style": { "marginTop": 20 }
+      },
+
+      {
+        "type": "stack",
+        "direction": "horizontal",
+        "justify": "center",
+        "gap": 18,
+        "style": { "marginTop": 14 },
+        "children": [
+          {
+            "type": "text",
+            "text": "Restore",
+            "style": { "color": "#6B7280", "fontSize": 12 },
+            "action": { "type": "restore" }
+          },
+          {
+            "type": "text",
+            "text": "Terms",
+            "style": { "color": "#6B7280", "fontSize": 12 },
+            "action": { "type": "openURL", "url": "https://example.com/terms" }
+          },
+          {
+            "type": "text",
+            "text": "Privacy",
+            "style": { "color": "#6B7280", "fontSize": 12 },
+            "action": {
+              "type": "openURL",
+              "url": "https://example.com/privacy"
+            }
+          }
+        ]
+      },
+
+      {
+        "type": "countdownTimer",
+        "id": "future-node-demo",
+        "endsAt": "2027-01-01T00:00:00Z",
+        "fallback": {
+          "type": "text",
+          "text": "Offer ends soon",
+          "style": {
+            "color": "#5B8CFF",
+            "fontSize": 13,
+            "textAlign": "center",
+            "marginTop": 16
+          }
+        }
+      }
+    ]
+  },
+
+  "meta": {
+    "experiment": "remote-copy-v1",
+    "variant": "a"
+  }
+}
