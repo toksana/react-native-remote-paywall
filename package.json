@@ -15,7 +15,6 @@
   "files": [
     "src",
     "lib",
-    "templates",
     "SCHEMA.md",
     "!**/__tests__",
     "!**/__fixtures__",
