@@ -17,31 +17,33 @@ describe('useActionDispatcher', () => {
     jest.useRealTimers();
   });
 
-  it('dispatches purchase to the host, defaulting to the selected package', () => {
+  it('dispatches purchase to the host, defaulting to the selected package', async () => {
     // Arrange
     const onPurchase = jest.fn().mockResolvedValue(undefined);
     const { result } = renderHook(() =>
       useActionDispatcher(hostWith({ onPurchase }), 'annual')
     );
 
-    // Act
-    act(() => result.current.onAction({ type: 'purchase' }));
+    // Act — async act so the latch-releasing microtask settles inside it.
+    await act(async () => {
+      result.current.onAction({ type: 'purchase' });
+    });
 
     // Assert
     expect(onPurchase).toHaveBeenCalledWith('annual');
   });
 
-  it('prefers an explicit packageId over the selected one', () => {
+  it('prefers an explicit packageId over the selected one', async () => {
     // Arrange
     const onPurchase = jest.fn().mockResolvedValue(undefined);
     const { result } = renderHook(() =>
       useActionDispatcher(hostWith({ onPurchase }), 'annual')
     );
 
-    // Act
-    act(() =>
-      result.current.onAction({ type: 'purchase', packageId: 'monthly' })
-    );
+    // Act — async act so the latch-releasing microtask settles inside it.
+    await act(async () => {
+      result.current.onAction({ type: 'purchase', packageId: 'monthly' });
+    });
 
     // Assert
     expect(onPurchase).toHaveBeenCalledWith('monthly');
