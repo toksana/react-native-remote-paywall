@@ -1,5 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react-native';
-import { View } from 'react-native';
+import {
+  render,
+  screen,
+  fireEvent,
+  within,
+} from '@testing-library/react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { renderNode } from './renderNode';
 import type { RenderContext } from './renderContext';
@@ -9,6 +14,18 @@ const annual: PackageDefinition = {
   id: 'annual',
   productId: 'com.example.app.pro.annual',
   title: 'Annual',
+};
+
+const monthly: PackageDefinition = {
+  id: 'monthly',
+  productId: 'com.example.app.pro.monthly',
+  title: 'Monthly',
+};
+
+const lifetime: PackageDefinition = {
+  id: 'lifetime',
+  productId: 'com.example.app.pro.lifetime',
+  title: 'Lifetime',
 };
 
 const contextWith = (
@@ -307,5 +324,175 @@ describe('stack', () => {
     // Act / Assert
     expect(() => renderTree(node)).not.toThrow();
     expect(screen.getByText('Identified')).toBeOnTheScreen();
+  });
+});
+
+describe('image', () => {
+  it('defaults resizeMode to cover', () => {
+    // Arrange
+    const node: Node = {
+      type: 'image',
+      source: { uri: 'https://example.com/hero.png' },
+    };
+
+    // Act
+    renderTree(node);
+
+    // Assert
+    const image = screen.UNSAFE_getByType(Image);
+    expect(image.props.source).toEqual({ uri: 'https://example.com/hero.png' });
+    expect(image.props.resizeMode).toBe('cover');
+  });
+
+  it('honors an explicit resizeMode', () => {
+    // Arrange
+    const node: Node = {
+      type: 'image',
+      source: { uri: 'https://example.com/hero.png' },
+      resizeMode: 'contain',
+    };
+
+    // Act
+    renderTree(node);
+
+    // Assert
+    expect(screen.UNSAFE_getByType(Image).props.resizeMode).toBe('contain');
+  });
+});
+
+describe('divider', () => {
+  it('renders a hairline by default', () => {
+    // Arrange
+    const node: Node = { type: 'divider' };
+
+    // Act
+    renderTree(node);
+
+    // Assert — the wrapping View from renderTree comes first; the divider's is last.
+    const divider = screen.UNSAFE_getAllByType(View).at(-1)!;
+    const style = StyleSheet.flatten(divider.props.style);
+    expect(style.height).toBe(StyleSheet.hairlineWidth);
+  });
+
+  it('honors thickness and color overrides', () => {
+    // Arrange
+    const node: Node = { type: 'divider', thickness: 4, color: '#ff0000' };
+
+    // Act
+    renderTree(node);
+
+    // Assert
+    const divider = screen.UNSAFE_getAllByType(View).at(-1)!;
+    const style = StyleSheet.flatten(divider.props.style);
+    expect(style.height).toBe(4);
+    expect(style.backgroundColor).toBe('#ff0000');
+  });
+});
+
+describe('packageList', () => {
+  const packagesCtx = (overrides: Partial<RenderContext> = {}): RenderContext =>
+    contextWith({
+      packages: [annual, monthly, lifetime],
+      products: {
+        [annual.productId]: {
+          productId: annual.productId,
+          price: '$39.99',
+          period: 'year',
+        },
+        [monthly.productId]: {
+          productId: monthly.productId,
+          price: '$5.99',
+          period: 'month',
+        },
+        [lifetime.productId]: {
+          productId: lifetime.productId,
+          price: '$99.99',
+        },
+      },
+      selectedPackageId: annual.id,
+      ...overrides,
+    });
+
+  it('renders a subset of packages in the given order', () => {
+    // Arrange
+    const node: Node = {
+      type: 'packageList',
+      packageIds: ['monthly', 'annual'],
+    };
+
+    // Act
+    renderTree(node, packagesCtx());
+
+    // Assert
+    const rows = screen.getAllByRole('radio');
+    expect(rows).toHaveLength(2);
+    expect(within(rows[0]!).getByText('Monthly')).toBeOnTheScreen();
+    expect(within(rows[1]!).getByText('Annual')).toBeOnTheScreen();
+    expect(screen.queryByText('Lifetime')).toBeNull();
+  });
+
+  it('defaults to every package in document order when packageIds is omitted', () => {
+    // Arrange
+    const node: Node = { type: 'packageList' };
+
+    // Act
+    renderTree(node, packagesCtx());
+
+    // Assert
+    const rows = screen.getAllByRole('radio');
+    expect(rows).toHaveLength(3);
+    expect(within(rows[0]!).getByText('Annual')).toBeOnTheScreen();
+    expect(within(rows[1]!).getByText('Monthly')).toBeOnTheScreen();
+    expect(within(rows[2]!).getByText('Lifetime')).toBeOnTheScreen();
+  });
+
+  it('calls onSelectPackage with the tapped row', () => {
+    // Arrange
+    const onSelectPackage = jest.fn();
+    const node: Node = { type: 'packageList' };
+
+    // Act
+    renderTree(node, packagesCtx({ onSelectPackage }));
+    fireEvent.press(screen.getAllByRole('radio')[1]!);
+
+    // Assert
+    expect(onSelectPackage).toHaveBeenCalledWith('monthly');
+  });
+
+  it('marks only the selected row as selected', () => {
+    // Arrange
+    const node: Node = { type: 'packageList' };
+
+    // Act
+    renderTree(node, packagesCtx({ selectedPackageId: 'monthly' }));
+
+    // Assert
+    const rows = screen.getAllByRole('radio');
+    expect(rows[0]!.props.accessibilityState.selected).toBe(false);
+    expect(rows[1]!.props.accessibilityState.selected).toBe(true);
+    expect(rows[2]!.props.accessibilityState.selected).toBe(false);
+  });
+
+  it('resolves each row against its own package, not the currently selected one', () => {
+    // Arrange — selection is "annual", but the monthly row must still show its
+    // own price rather than inheriting annual's.
+    const node: Node = { type: 'packageList' };
+    const packagesWithSubtitle = [
+      { ...annual, subtitle: '{{package.price}} per {{package.period}}' },
+      { ...monthly, subtitle: '{{package.price}} per {{package.period}}' },
+    ];
+
+    // Act
+    renderTree(
+      node,
+      packagesCtx({
+        packages: packagesWithSubtitle,
+        selectedPackageId: annual.id,
+      })
+    );
+
+    // Assert
+    expect(screen.getByText('$39.99 per year')).toBeOnTheScreen();
+    expect(screen.getByText('$5.99 per month')).toBeOnTheScreen();
   });
 });

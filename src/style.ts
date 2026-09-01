@@ -1,4 +1,4 @@
-import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
+import type { ImageStyle, StyleProp, TextStyle, ViewStyle } from 'react-native';
 
 import type { Style } from './schema';
 
@@ -93,5 +93,5 @@ export const sanitizeStyle = (raw: unknown): Style => {
  */
 export const toRNStyle = (
   style?: Style
-): StyleProp<ViewStyle & TextStyle> | undefined =>
-  style as StyleProp<ViewStyle & TextStyle> | undefined;
+): StyleProp<ViewStyle & TextStyle & ImageStyle> | undefined =>
+  style as StyleProp<ViewStyle & TextStyle & ImageStyle> | undefined;

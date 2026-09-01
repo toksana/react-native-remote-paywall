@@ -1,7 +1,9 @@
 import React from 'react';
 import {
+  Image,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
   type ViewStyle,
@@ -11,14 +13,18 @@ import type {
   Action,
   BaseNode,
   ButtonNode,
+  DividerNode,
+  ImageNode,
   Node,
+  PackageDefinition,
+  PackageListNode,
   SpacerNode,
   StackNode,
   Style,
   TextNode,
 } from './schema';
 import type { RenderContext } from './renderContext';
-import { resolveText } from './placeholders';
+import { resolveText, resolvePlaceholders } from './placeholders';
 import { toRNStyle } from './style';
 
 /**
@@ -45,8 +51,20 @@ export const renderNode = (
       return renderButton(node as ButtonNode, ctx);
     case 'spacer':
       return renderSpacer(node as SpacerNode);
-    default:
-      return node.fallback ? renderNode(node.fallback, ctx) : null;
+    case 'image':
+      return renderImage(node as ImageNode);
+    case 'divider':
+      return renderDivider(node as DividerNode);
+    case 'packageList':
+      return renderPackageList(node as PackageListNode, ctx);
+    default: {
+      // `Node` is a closed, discriminated union, so the type checker treats the
+      // 7 cases above as exhaustive — but a document fetched at runtime can
+      // carry an unrecognised `type` the type system never sees. Cast back to
+      // the shared base to reach `fallback` for that case.
+      const fallback = (node as BaseNode).fallback;
+      return fallback ? renderNode(fallback, ctx) : null;
+    }
   }
 };
 
@@ -148,6 +166,103 @@ const renderSpacer = (node: SpacerNode): React.ReactElement => {
       : { width: node.size ?? 0, height: node.size ?? 0 };
 
   return <View style={style} />;
+};
+
+const renderImage = (node: ImageNode): React.ReactElement => (
+  <Image
+    source={{ uri: node.source.uri }}
+    resizeMode={node.resizeMode ?? 'cover'}
+    style={toRNStyle(node.style)}
+  />
+);
+
+const renderDivider = (node: DividerNode): React.ReactElement => (
+  <View
+    style={[
+      {
+        height: node.thickness ?? StyleSheet.hairlineWidth,
+        backgroundColor: node.color ?? '#00000022',
+      },
+      toRNStyle(node.style),
+    ]}
+  />
+);
+
+const renderPackageList = (
+  node: PackageListNode,
+  ctx: RenderContext
+): React.ReactElement => {
+  const horizontal = node.direction === 'horizontal';
+  const rows = resolvePackages(node.packageIds, ctx.packages);
+
+  const layout: ViewStyle = {
+    flexDirection: horizontal ? 'row' : 'column',
+    ...(node.gap != null ? { gap: node.gap } : null),
+  };
+
+  return (
+    <View style={layout}>
+      {rows.map((pkg) => (
+        <PackageRow key={pkg.id} node={node} pkg={pkg} ctx={ctx} />
+      ))}
+    </View>
+  );
+};
+
+const resolvePackages = (
+  packageIds: string[] | undefined,
+  packages: PackageDefinition[]
+): PackageDefinition[] => {
+  if (!packageIds) return packages;
+  const byId = new Map(packages.map((pkg) => [pkg.id, pkg]));
+  return packageIds
+    .map((id) => byId.get(id))
+    .filter((pkg): pkg is PackageDefinition => pkg != null);
+};
+
+const PackageRow = ({
+  node,
+  pkg,
+  ctx,
+}: {
+  node: PackageListNode;
+  pkg: PackageDefinition;
+  ctx: RenderContext;
+}): React.ReactElement => {
+  const selected = pkg.id === ctx.selectedPackageId;
+  const product = ctx.products[pkg.productId];
+  // Each row resolves placeholders against its own package, never the
+  // currently-selected one — `resolveText` would show every row's price as
+  // whatever package is selected elsewhere on the screen.
+  const title = resolvePlaceholders(pkg.title, pkg, product);
+  const subtitle = pkg.subtitle
+    ? resolvePlaceholders(pkg.subtitle, pkg, product)
+    : undefined;
+  const badge = pkg.badge
+    ? resolvePlaceholders(pkg.badge, pkg, product)
+    : undefined;
+
+  return (
+    <Pressable
+      onPress={() => ctx.onSelectPackage(pkg.id)}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      style={[
+        toRNStyle(node.itemStyle),
+        selected && toRNStyle(node.selectedItemStyle),
+      ]}
+    >
+      <Text style={toRNStyle(node.titleStyle)}>{title}</Text>
+      {subtitle != null && (
+        <Text style={toRNStyle(node.subtitleStyle)}>{subtitle}</Text>
+      )}
+      {badge != null && (
+        <View style={toRNStyle(node.badgeStyle)}>
+          <Text style={toRNStyle(node.badgeTextStyle)}>{badge}</Text>
+        </View>
+      )}
+    </Pressable>
+  );
 };
 
 /* -------------------------------------------------------------------------- */

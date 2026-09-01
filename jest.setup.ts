@@ -1,10 +1,12 @@
-// React Native 0.83 ships a jest mock for `Text` that its own `Text` cannot
-// satisfy: `jest/mockComponent.js` reads `RealComponent.prototype.constructor`,
-// and `Libraries/Text/Text` is an arrow function, which has no `prototype`.
-// Rendering any `<Text>` under the stock preset throws. The real component
-// renders fine under react-test-renderer, so use it and drop the broken mock.
-// Revisit when React Native fixes mockComponent — this line can go then.
+// React Native 0.83 ships jest mocks for `Text` and `Image` that their own
+// components cannot satisfy: `jest/mockComponent.js` reads
+// `RealComponent.prototype.constructor`, and both `Libraries/Text/Text` and
+// `Libraries/Image/Image` are arrow functions, which have no `prototype`.
+// Rendering either under the stock preset throws. The real components render
+// fine under react-test-renderer, so use them and drop the broken mocks.
+// Revisit when React Native fixes mockComponent — these two lines can go then.
 jest.unmock('react-native/Libraries/Text/Text');
+jest.unmock('react-native/Libraries/Image/Image');
 
 // react-native-remote-paywall reaches the network only through the global
 // `fetch`. No test should hit a real socket — every test that exercises loading
@@ -21,8 +23,10 @@ if (!isMock(globalThis.fetch)) {
   }) as unknown as typeof fetch;
 }
 
-// `Image.prefetch` is exercised by the prefetch pipeline. The react-native Jest
-// preset renders `Image` as a mock with no static `prefetch`, so tests that need
-// it assign their own spy; the pipeline feature-detects and no-ops otherwise.
+// `Image.prefetch` is exercised by the prefetch pipeline. `Image` is now the
+// real component (unmocked above), so its real `prefetch` static exists —
+// tests that need particular behavior install their own
+// `jest.spyOn(Image, 'prefetch')`; the pipeline feature-detects and no-ops
+// when a host build has no `prefetch` at all.
 
 export {};
