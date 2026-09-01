@@ -162,7 +162,10 @@ selected package, or — inside a `packageList` row — against that row's packa
 | `{{package.trialLength}}` | Localized trial duration |
 
 The list is closed. An unknown token, or one the store did not return, renders
-as an empty string. It never leaks raw `{{...}}` to the user and never throws.
+as an empty string. It never leaks raw `{{...}}` to the user and never throws —
+including for a token that is not merely unknown but malformed, like
+`{{package.}}` or `{{price}}`. Proved by
+[`src/placeholders.test.ts`](src/placeholders.test.ts).
 
 Write copy that survives an empty token. `"Try free for {{package.trialLength}}"`
 degrades to `"Try free for "` when there is no trial — so guard it by putting

@@ -16,3 +16,5 @@ if (!isMock(globalThis.fetch)) {
 // `Image.prefetch` is exercised by the prefetch pipeline. The react-native Jest
 // preset renders `Image` as a mock with no static `prefetch`, so tests that need
 // it assign their own spy; the pipeline feature-detects and no-ops otherwise.
+
+export {};
