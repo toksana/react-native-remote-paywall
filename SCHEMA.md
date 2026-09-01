@@ -251,7 +251,8 @@ knows the type, they see a live timer. Same document, no branching.
 
 **Unknown style key.** Dropped at parse time. Not forwarded to React Native.
 This matters for more than tidiness: it stops a newer document from reaching
-style props an old SDK never intended to expose.
+style props an old SDK never intended to expose. Proved by
+[`src/style.test.ts`](src/style.test.ts).
 
 **Unknown action type.** The node still renders, but taps do nothing and an
 `onEvent` is emitted so you can see it in analytics.
