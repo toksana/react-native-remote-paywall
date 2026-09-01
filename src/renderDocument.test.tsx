@@ -1,4 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react-native';
 import { StyleSheet, View } from 'react-native';
 
 import { RenderDocument } from './renderDocument';
@@ -100,7 +105,7 @@ describe('RenderDocument', () => {
     expect(screen.getByText('CTA: $5.99 per month')).toBeOnTheScreen();
   });
 
-  it('dispatches purchase for the currently selected package by default', () => {
+  it('dispatches purchase for the currently selected package by default', async () => {
     // Arrange
     const onPurchase = jest.fn().mockResolvedValue(undefined);
     const doc = docWith();
@@ -117,6 +122,9 @@ describe('RenderDocument', () => {
 
     // Assert
     expect(onPurchase).toHaveBeenCalledWith('annual');
+
+    // Let the busy latch's release settle inside act() before the test ends.
+    await waitFor(() => expect(onPurchase).toHaveBeenCalledTimes(1));
   });
 
   it('dispatches dismiss to the host', () => {

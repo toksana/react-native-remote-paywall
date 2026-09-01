@@ -1,14 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
-import type {
-  Action,
-  PaywallDocument,
-  PaywallHost,
-  ResolvedProduct,
-} from './schema';
+import type { PaywallDocument, PaywallHost, ResolvedProduct } from './schema';
 import type { RenderContext } from './renderContext';
 import { renderNode } from './renderNode';
+import { useActionDispatcher } from './useActionDispatcher';
+import { EVENT } from './constants';
 
 export interface RenderDocumentProps {
   doc: PaywallDocument;
@@ -18,10 +15,9 @@ export interface RenderDocumentProps {
 
 /**
  * Owns everything a single paywall screen needs beyond the pure `renderNode`
- * tree: which package is selected, dispatching actions to the host, and the
- * screen background. `useActionDispatcher` (Phase 2) replaces the body of
- * `onAction` below with the busy-latch/watchdog/`onEvent` version — this
- * component's shape does not change then, only what `onAction` calls.
+ * tree: which package is selected, dispatching actions to the host (via
+ * `useActionDispatcher`, which also owns the busy latch), and the screen
+ * background.
  */
 export const RenderDocument = ({
   doc,
@@ -35,35 +31,26 @@ export const RenderDocument = ({
       ''
   );
 
-  const onAction = useCallback(
-    (action: Action) => {
-      switch (action.type) {
-        case 'purchase':
-          host.onPurchase(action.packageId ?? selectedPackageId);
-          break;
-        case 'restore':
-          host.onRestore();
-          break;
-        case 'dismiss':
-          host.onDismiss();
-          break;
-        case 'openURL':
-          host.onOpenURL?.(action.url);
-          break;
-      }
+  const onSelectPackage = useCallback(
+    (packageId: string) => {
+      setSelectedPackageId(packageId);
+      host.onEvent?.({ name: EVENT.selectPackage, payload: { packageId } });
     },
-    [host, selectedPackageId]
+    [host]
   );
+
+  const { onAction, busy } = useActionDispatcher(host, selectedPackageId);
 
   const ctx = useMemo<RenderContext>(
     () => ({
       packages: doc.packages,
       products,
       selectedPackageId,
-      onSelectPackage: setSelectedPackageId,
+      onSelectPackage,
       onAction,
+      busy,
     }),
-    [doc.packages, products, selectedPackageId, onAction]
+    [doc.packages, products, selectedPackageId, onSelectPackage, onAction, busy]
   );
 
   return (

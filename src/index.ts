@@ -5,3 +5,6 @@ export type {
   StorageAdapter,
   ResolvedProduct,
 } from './schema';
+
+export { createPaywallClient } from './paywallClient';
+export { RemotePaywall } from './RemotePaywall';

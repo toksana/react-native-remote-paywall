@@ -43,6 +43,9 @@ export interface PaywallClient {
   load(id: string): void;
   subscribe(id: string): (onStoreChange: () => void) => () => void;
   getSnapshot(id: string): () => PaywallSnapshot;
+  /** Not part of the public API surface — `RemotePaywall`'s own route to the
+   * host callbacks it needs to wire into `RenderDocument`. */
+  host: PaywallHost;
 }
 
 interface PaywallEntry {
@@ -376,5 +379,5 @@ export const createPaywallClient = (
   const getSnapshot = (id: string) => (): PaywallSnapshot =>
     ensureEntry(id).snapshot;
 
-  return { prefetch, load, subscribe, getSnapshot };
+  return { prefetch, load, subscribe, getSnapshot, host: config.host };
 };
