@@ -1,5 +1,6 @@
 import { Image } from 'react-native';
 
+import { raceWithDelay } from './raceWithDelay';
 import type { Node, PaywallDocument } from './schema';
 
 /**
@@ -51,8 +52,5 @@ export const prefetchImages = async (
     })
   );
 
-  await Promise.race([settled, delay(timeoutMs)]);
+  await raceWithDelay(settled, timeoutMs);
 };
-
-const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
