@@ -71,6 +71,8 @@ android/keystores/debug.keystore
 
 # Expo
 .expo/
+# `expo export --platform web`, which is what CI's build-web job runs
+example/dist/
 
 # Turborepo
 .turbo/
