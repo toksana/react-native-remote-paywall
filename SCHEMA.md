@@ -51,7 +51,8 @@ so it is restricted to `^[a-zA-Z0-9_-]{1,64}$`. An id outside that set throws a
 `RangeError` — one of only two throws in the SDK, and one that fires on a
 developer's first run rather than in a user's hands. The restriction is what
 stops `../` or a full URL in an id from redirecting the document request
-somewhere you did not intend.
+somewhere you did not intend. Proved by
+[`src/resolveUrl.test.ts`](src/resolveUrl.test.ts).
 
 ---
 
@@ -72,7 +73,8 @@ somewhere you did not intend.
 sends it anywhere, and has no idea what a subscription is.
 
 At most one package may set `selectedByDefault`. If none does, the first one
-is selected. If several do, the first wins and the rest are ignored.
+is selected. If several do, the first wins and the rest are ignored. Proved by
+[`src/validateDocument.test.tsx`](src/validateDocument.test.tsx).
 
 ---
 
@@ -112,10 +114,12 @@ tappable — this is how you build "Restore" and "Terms" links without a button.
 ### `image`
 
 `source.uri` is required. Set `source.prefetch: true` on anything above the
-fold; those URLs are fetched before the screen is allowed to render, which is
-what prevents holes on a cold start. Omit `accessibilityLabel` on decorative
-images and the renderer marks them non-accessible, so screen readers skip past
-instead of announcing an unlabelled graphic.
+fold: those URLs are warmed as soon as a document is fetched, which is why
+calling `paywalls.prefetch(id)` at app start is what keeps holes off the
+screen when the paywall opens later. Warming never blocks a render — a slow
+image delays nothing, it just arrives uncached. Omit `accessibilityLabel` on
+decorative images and the renderer marks them non-accessible, so screen
+readers skip past instead of announcing an unlabelled graphic.
 
 ### `button`
 
@@ -217,6 +221,8 @@ looks like a link but behaves as a button, and announcing it as one tells a
 screen-reader user to expect a page they will never get.
 
 An explicit `accessibilityLabel` always wins over the default in that table.
+Proved by the accessibility block in
+[`src/renderNode.test.tsx`](src/renderNode.test.tsx).
 
 ---
 
@@ -234,7 +240,9 @@ them. `purchase` without `packageId` uses the current selection.
 
 `openURL` accepts `http`, `https` and `mailto` only. Everything else is
 dropped at parse time — a fetched document must not be able to trigger a
-deep link into your app.
+deep link into your app. The action goes, the node stays: a "Terms" link with
+a `javascript:` URL still renders, it just does nothing. Proved by
+[`src/validateDocument.test.tsx`](src/validateDocument.test.tsx).
 
 ---
 
@@ -252,7 +260,9 @@ must change in the same commit, in both directions.
 and continue with its siblings. The example document ends with a
 `countdownTimer` node — a type that does not exist in v1 — carrying a text
 fallback. On a v1 SDK the user sees "Offer ends soon". On a future SDK that
-knows the type, they see a live timer. Same document, no branching.
+knows the type, they see a live timer. Same document, no branching. Proved by
+[`src/validateDocument.test.tsx`](src/validateDocument.test.tsx), which
+validates that very document and renders "Offer ends soon" out of it.
 
 **Unknown style key.** Dropped at parse time. Not forwarded to React Native.
 This matters for more than tidiness: it stops a newer document from reaching
@@ -260,15 +270,18 @@ style props an old SDK never intended to expose. Proved by
 [`src/style.test.ts`](src/style.test.ts).
 
 **Unknown action type.** The node still renders, but taps do nothing and an
-`onEvent` is emitted so you can see it in analytics.
+`onEvent` is emitted so you can see it in analytics. Proved by
+[`src/useActionDispatcher.test.ts`](src/useActionDispatcher.test.ts).
 
-**Unknown top-level field.** Preserved but ignored.
+**Unknown top-level field.** Preserved but ignored. Proved by
+[`src/validateDocument.test.tsx`](src/validateDocument.test.tsx).
 
 **`schemaVersion` higher than the SDK supports.** The document is rejected
 whole. The SDK falls back to the last cached document, and if there is none,
 to the bundled default the host app shipped with. It never renders a partially
 understood document — that is the one case where degrading node by node would
-produce something worse than showing nothing new.
+produce something worse than showing nothing new. Proved by
+[`src/validateDocument.test.tsx`](src/validateDocument.test.tsx).
 
 ### What counts as breaking
 
@@ -304,7 +317,9 @@ document exists, the SDK renders it immediately and refreshes in the background;
 the newly fetched revision is written to cache and takes effect the next time
 the paywall opens. This is the deliberate trade for never showing a spinner
 where a paywall should be. Plan copy changes a session ahead, and do not use
-this as a kill switch.
+this as a kill switch. Proved by
+[`src/paywallClient.test.ts`](src/paywallClient.test.ts), which asserts the
+newer revision reaches the cache while the rendered document stays put.
 
 ---
 
@@ -366,3 +381,8 @@ new one, never a half-written document. Both AsyncStorage and MMKV satisfy
 this. Keys are namespaced `rnrp:v1:doc:<id>`, and the `v1` segment means a
 future change to the cache envelope simply misses the old entries instead of
 deserializing them into new code.
+
+A `get` that rejects, returns junk, or returns a document that no longer
+validates all read the same way — as "no cache" — so a corrupt entry costs a
+network round trip, never a crash. Proved by
+[`src/documentCache.test.ts`](src/documentCache.test.ts).
