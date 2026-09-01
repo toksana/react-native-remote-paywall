@@ -1,3 +1,11 @@
+// React Native 0.83 ships a jest mock for `Text` that its own `Text` cannot
+// satisfy: `jest/mockComponent.js` reads `RealComponent.prototype.constructor`,
+// and `Libraries/Text/Text` is an arrow function, which has no `prototype`.
+// Rendering any `<Text>` under the stock preset throws. The real component
+// renders fine under react-test-renderer, so use it and drop the broken mock.
+// Revisit when React Native fixes mockComponent — this line can go then.
+jest.unmock('react-native/Libraries/Text/Text');
+
 // react-native-remote-paywall reaches the network only through the global
 // `fetch`. No test should hit a real socket — every test that exercises loading
 // installs its own `globalThis.fetch = jest.fn()`. Guard against a forgotten

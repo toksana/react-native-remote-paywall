@@ -196,20 +196,25 @@ reader announces a sentence that stops mid-air. Writing the spoken label as a
 complete thought is the cheapest fix.
 
 **Roles are inferred, never authorable.** There is no `accessibilityRole` field.
-The renderer already knows a `button` is a button, a tappable `text` is a link
-and a `packageList` row is a radio, and a document fetched from a server should
-not be able to tell assistive technology that a purchase button is something
-else. Same reasoning that keeps actions as named intents rather than handlers.
+The renderer already knows a `button` is a button and a `packageList` row is a
+radio, and a document fetched from a server should not be able to tell
+assistive technology that a purchase button is something else. Same reasoning
+that keeps actions as named intents rather than handlers.
 
 | Node | Announced as | Default label | State |
 |---|---|---|---|
 | `button` | button | the resolved `label` | disabled while a purchase or restore is in flight |
-| `text` with `action` | link | the resolved `text` | — |
-| `text` without `action` | static text | the resolved `text` | — |
+| `text` with an `openURL` action | link | the resolved `text` | — |
+| `text` with any other action | button | the resolved `text` | — |
+| `text` with no action | static text | the resolved `text` | — |
 | `image` with a label | image | `accessibilityLabel` | — |
 | `image` without a label | *skipped entirely* | — | — |
 | `packageList` row | radio | title, subtitle and badge, joined | selected / not selected |
 | `stack`, `spacer`, `divider` | nothing focusable | — | — |
+
+Only `openURL` leaves the app, so only `openURL` is a link. A "Restore" link
+looks like a link but behaves as a button, and announcing it as one tells a
+screen-reader user to expect a page they will never get.
 
 An explicit `accessibilityLabel` always wins over the default in that table.
 

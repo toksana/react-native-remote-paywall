@@ -21,6 +21,9 @@ export default defineConfig([
     rules: {
       'react/react-in-jsx-scope': 'off',
       'prettier/prettier': 'error',
+      // This library is a runtime style renderer — it composes RN style objects
+      // from a fetched document, so "inline" styles are the whole point.
+      'react-native/no-inline-styles': 'off',
     },
   },
   {
