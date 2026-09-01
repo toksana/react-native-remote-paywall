@@ -262,6 +262,39 @@ describe('accessibility', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
+  it('announces a labelled image as an image, placeholders resolved', () => {
+    // Arrange
+    const node: Node = {
+      type: 'image',
+      source: { uri: 'https://cdn.example.com/hero.png' },
+      accessibilityLabel: 'Everything you get for {{package.price}}',
+    };
+
+    // Act
+    renderTree(node);
+
+    // Assert
+    expect(screen.getByRole('image')).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText('Everything you get for $39.99')
+    ).toBeOnTheScreen();
+  });
+
+  it('skips an unlabelled image entirely rather than announcing a graphic', () => {
+    // Arrange — decorative art, no label authored.
+    const node: Node = {
+      type: 'image',
+      source: { uri: 'https://cdn.example.com/hero.png' },
+    };
+
+    // Act
+    renderTree(node);
+
+    // Assert
+    expect(screen.queryByRole('image')).toBeNull();
+    expect(screen.UNSAFE_getByType(Image).props.accessible).toBe(false);
+  });
+
   it('speaks the authored label instead of a visible one left dangling', () => {
     // Arrange — the store returned no trial, so the visible label degrades.
     const node: Node = {

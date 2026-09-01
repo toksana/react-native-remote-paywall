@@ -52,7 +52,7 @@ export const renderNode = (
     case 'spacer':
       return renderSpacer(node as SpacerNode);
     case 'image':
-      return renderImage(node as ImageNode);
+      return renderImage(node as ImageNode, ctx);
     case 'divider':
       return renderDivider(node as DividerNode);
     case 'packageList':
@@ -168,13 +168,26 @@ const renderSpacer = (node: SpacerNode): React.ReactElement => {
   return <View style={style} />;
 };
 
-const renderImage = (node: ImageNode): React.ReactElement => (
-  <Image
-    source={{ uri: node.source.uri }}
-    resizeMode={node.resizeMode ?? 'cover'}
-    style={toRNStyle(node.style)}
-  />
-);
+const renderImage = (
+  node: ImageNode,
+  ctx: RenderContext
+): React.ReactElement => {
+  // Hero art on a paywall carries nothing a screen reader needs, and
+  // announcing an unlabelled graphic is worse than passing over it. A label
+  // is the author saying this one is different, so it is also the switch.
+  const label = spokenLabel(node, ctx);
+
+  return (
+    <Image
+      source={{ uri: node.source.uri }}
+      resizeMode={node.resizeMode ?? 'cover'}
+      style={toRNStyle(node.style)}
+      accessible={label != null}
+      accessibilityRole={label != null ? 'image' : undefined}
+      accessibilityLabel={label}
+    />
+  );
+};
 
 const renderDivider = (node: DividerNode): React.ReactElement => (
   <View
