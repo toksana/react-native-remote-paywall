@@ -15,6 +15,7 @@
   "files": [
     "src",
     "lib",
+    "SCHEMA.md",
     "android",
     "ios",
     "cpp",
