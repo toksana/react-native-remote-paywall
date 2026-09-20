@@ -8744,8 +8744,8 @@ __metadata:
     turbo: "npm:^2.9.16"
     typescript: "npm:^6.0.3"
   peerDependencies:
-    react: "*"
-    react-native: "*"
+    react: ">=18"
+    react-native: ">=0.72"
   languageName: unknown
   linkType: soft
 
