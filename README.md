@@ -2,6 +2,12 @@
 
 Update your React Native paywall without shipping an app update. Zero dependencies.
 
+![Editing the paywall JSON in VS Code, then reopening the running iOS app to see the new title, button text and colors](assets/paywall-intro.gif)
+
+_Left: the paywall JSON, edited and saved. Right: the running app, closed and
+reopened — new title, button text and colors. No rebuild, no reload, no app
+update._
+
 Your paywall is a JSON document you host. The SDK fetches it, validates it,
 caches it, and renders it into React Native primitives. Change the headline,
 the trial framing, the order of the plans — publish the JSON, and the next
